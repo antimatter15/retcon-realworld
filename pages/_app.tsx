@@ -35,28 +35,6 @@ const GlobalStyle = createGlobalStyle(css`
 
 const theme = {}
 
-let uncachedReload
-function defaultUncachedCallback(err, type) {
-    const makeNOPQuery = () => {
-        let q = () => null
-        q['one'] = () => makeNOPQuery()
-        q['many'] = () => []
-        return q
-    }
-    if (uncachedReload) throw err
-    console.error(err)
-    uncachedReload = true
-    const routeChangeCallback = () => {
-        uncachedReload = false
-        Router.events.off('routeChangeComplete', routeChangeCallback)
-    }
-    Router.events.on('routeChangeComplete', routeChangeCallback)
-    Router.push(Router.asPath)
-    if (type === 1) return makeNOPQuery()
-    if (type === 2) return []
-    return null
-}
-
 export default function MyApp({ Component, pageProps }) {
     const { tape, data, user, sql } = pageProps
     const query = createQuery(tape, data, false, defaultUncachedCallback)
@@ -125,4 +103,42 @@ function useScrollRestoration() {
             })
         }
     }, [])
+}
+
+// Here we specify a uncached data callback so during development
+// if a component is hot-reloaded with code that requires new
+// data, we automatically execute a "soft refresh" (i.e. we call
+// getServerSideProps again but without triggering a full browser
+// refresh). We record the status with the "uncachedSoftReload"
+// state variable, so that if this happens again without a sucessful
+// "routeChangeComplete" event, we throw the error rather than
+// enter some kind of refresh loop.
+
+let uncachedSoftReload
+function defaultUncachedCallback(err: Error, type: number) {
+    if (uncachedSoftReload) throw err
+    // eslint-disable-next-line no-console
+    console.error(err)
+    uncachedSoftReload = true
+    Router.push(Router.asPath).then(
+        success => {
+            if (success) uncachedSoftReload = false
+        },
+        () => {
+            // do nothing
+        }
+    )
+    // Here we return something that matches the expected
+    // Query interface, so that our subsequent code has the
+    // greatest likelihood of successfully rendering before
+    // the data is loaded
+    const makeNOPQuery = () => {
+        const q = () => null
+        q.one = () => makeNOPQuery()
+        q.many = () => []
+        return q
+    }
+    if (type === 1) return makeNOPQuery()
+    if (type === 2) return []
+    return null
 }

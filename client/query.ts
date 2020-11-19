@@ -1,4 +1,7 @@
+/* eslint-disable no-restricted-syntax,guard-for-in */
+
 import React from 'react'
+
 export const QueryContext = React.createContext<Query>(null)
 
 export function useQuery() {
@@ -39,6 +42,10 @@ export type Tape = {
     t: number
     // children of tape node
     c?: { [query: string]: Tape }
+
+    count?: number
+    used?: boolean
+    miss?: boolean
 }
 
 // An object which contains information for the tagged template
@@ -65,7 +72,7 @@ type RootQuery = Query & {
 // as expected
 
 export function createQuery(
-    root = {
+    root: Tape = {
         a: 'data',
         t: 1,
         count: 0,
@@ -75,14 +82,14 @@ export function createQuery(
     uncachedCallback = null
 ): RootQuery {
     const make = (tape, data, stack = []) => {
-        let q = (...args) => helper(tape, data, args, 0, stack)
-        q['one'] = (...args) => helper(tape, data, args, 1, stack)
-        q['many'] = (...args) => helper(tape, data, args, 2, stack)
-        return q
+        const q = (...args) => helper(tape, data, args, 0, stack)
+        q.one = (...args) => helper(tape, data, args, 1, stack)
+        q.many = (...args) => helper(tape, data, args, 2, stack)
+        return q as RootQuery
     }
     const helper = (parent, data, args, type, stack) => {
-        let query = encode(args)
-        let nextStack = [query, ...stack]
+        const query = encode(args)
+        const nextStack = [query, ...stack]
         if (!parent)
             throw new Error(
                 'Invalid tape data structure: Did you forget to define `getServerSideProps`?'
@@ -90,7 +97,7 @@ export function createQuery(
         if (!parent.c?.[query]) {
             if (mutable) {
                 if (!parent.c) parent.c = {}
-                parent.c[query] = { a: 'a' + ++root.count, t: type }
+                parent.c[query] = { a: `a${++root.count}`, t: type }
             } else {
                 const err = QueryError(
                     `Uncached query\n\n` +
@@ -106,11 +113,11 @@ export function createQuery(
                 throw err
             }
         }
-        let tape = parent.c[query]
-        tape['used'] = true
+        const tape = parent.c[query]
+        tape.used = true
 
         if (!data || !(tape.a in data)) {
-            if (data !== null) tape['miss'] = true
+            if (data !== null) tape.miss = true
         }
         if (tape.t !== type) throw new Error('Query reused with different type')
         if (type === 2) {
@@ -124,22 +131,22 @@ export function createQuery(
         return data && data[tape.a]
     }
     const q = make(root, data)
-    q['tape'] = root
-    root['miss'] = true
-    root['used'] = true
-    return q as any
+    q.tape = root
+    root.miss = true
+    root.used = true
+    return q
 }
 
 export function cleanTape(tape: Tape) {
-    delete tape['used']
-    delete tape['miss']
-    if (tape.c) for (let key in tape.c) cleanTape(tape.c[key])
+    delete tape.used
+    delete tape.miss
+    if (tape.c) for (const key in tape.c) cleanTape(tape.c[key])
 }
 
 export function mergeData(tape, oldData, newData) {
     if (!tape.c) return
-    for (let key in tape.c) {
-        let ast = tape.c[key]
+    for (const key in tape.c) {
+        const ast = tape.c[key]
         if (!(ast.a in newData)) continue
         if (!oldData[ast.a] || ast.t === 0) {
             oldData[ast.a] = newData[ast.a]
@@ -162,13 +169,13 @@ export function mergeData(tape, oldData, newData) {
 }
 
 export function filterTape(tape: Tape) {
-    delete tape['count']
+    delete tape.count
     const helper = tape => {
-        delete tape['used']
-        delete tape['miss']
+        delete tape.used
+        delete tape.miss
         if (tape.c)
-            for (let key in tape.c) {
-                let ast = tape.c[key]
+            for (const key in tape.c) {
+                const ast = tape.c[key]
                 if (ast.used) {
                     helper(ast)
                 } else {
@@ -180,8 +187,8 @@ export function filterTape(tape: Tape) {
 }
 
 export function filterData(tape, data) {
-    for (let key in tape.c) {
-        let ast = tape.c[key]
+    for (const key in tape.c) {
+        const ast = tape.c[key]
         if (!ast.used) {
             delete data[ast.a]
         } else if (ast.t === 1 && data[ast.a]) {
@@ -196,15 +203,17 @@ export function filterData(tape, data) {
 
 function QueryError(message, stack) {
     const err = new Error(
-        `${message}\n${stack.map(k => '> ' + simpleFormatTemplate(JSON.parse(k))).join('\n')}`
+        `${message}\n${stack.map(k => `> ${simpleFormatTemplate(JSON.parse(k))}`).join('\n')}`
     )
     // Here we mess with the error's stack trace in order to highlight the
-    // user's own code, rather than this data fetching library.
+    // user's own code, rather than this data fetching library. This is slightly
+    // brittle because it hardcodes this filename, but since it only affects
+    // dev hot reloading, it'll probably be fine.
     if (err.stack) err.stack = err.stack.replace(/[^\n]+query\.ts[^\n]+\n/g, '')
     return err
 }
 
-function simpleFormatTemplate(args) {
+function simpleFormatTemplate(args: [string[], ...string[]]): string {
     const [strings, ...values] = args
     return strings.reduce((acc, cur, i) => acc + values[i - 1] + cur)
 }
@@ -228,12 +237,12 @@ function encode(args: any[]): string {
 // Recursively flatten SQL template objects so we can compose different
 // fragments of SQL queries together
 function flattenSQLFragments(args: any[]) {
-    let [strings, ...values] = args
-    let outStrings = [strings[0]],
-        outValues = []
+    const [strings, ...values] = args
+    const outStrings = [strings[0]]
+    const outValues = []
     for (let i = 0; i < values.length; i++) {
         if (values[i] && values[i].__sql) {
-            let [s, ...v] = flattenSQLFragments(values[i].__sql)
+            const [s, ...v] = flattenSQLFragments(values[i].__sql)
             outStrings[outStrings.length - 1] += s[0]
             for (let j = 0; j < v.length; j++) {
                 outStrings.push(s[j + 1])
