@@ -35,9 +35,31 @@ const GlobalStyle = createGlobalStyle(css`
 
 const theme = {}
 
+let uncachedReload
+function defaultUncachedCallback(err, type) {
+    const makeNOPQuery = () => {
+        let q = () => null
+        q['one'] = () => makeNOPQuery()
+        q['many'] = () => []
+        return q
+    }
+    if (uncachedReload) throw err
+    console.error(err)
+    uncachedReload = true
+    const routeChangeCallback = () => {
+        uncachedReload = false
+        Router.events.off('routeChangeComplete', routeChangeCallback)
+    }
+    Router.events.on('routeChangeComplete', routeChangeCallback)
+    Router.push(Router.asPath)
+    if (type === 1) return makeNOPQuery()
+    if (type === 2) return []
+    return null
+}
+
 export default function MyApp({ Component, pageProps }) {
     const { tape, data, user, sql } = pageProps
-    const query = createQuery(tape, data, false)
+    const query = createQuery(tape, data, false, defaultUncachedCallback)
     useScrollRestoration()
 
     return (

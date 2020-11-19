@@ -1,5 +1,4 @@
 import React from 'react'
-
 export const QueryContext = React.createContext<Query>(null)
 
 export function useQuery() {
@@ -72,7 +71,8 @@ export function createQuery(
         count: 0,
     },
     data = {},
-    mutable = true
+    mutable = true,
+    uncachedCallback = null
 ): RootQuery {
     const make = (tape, data, stack = []) => {
         let q = (...args) => helper(tape, data, args, 0, stack)
@@ -92,16 +92,18 @@ export function createQuery(
                 if (!parent.c) parent.c = {}
                 parent.c[query] = { a: 'a' + ++root.count, t: type }
             } else {
-                throw QueryError(
+                const err = QueryError(
                     `Uncached query\n\n` +
                         `Try reloading the page. This may occur in development when ` +
-                        `hot-reloading with code that fetches additional data.\n` +
+                        `hot-reloading with code that fetches additional data. ` +
                         `Otherwise this may occur when attempting to fetch data ` +
-                        `from a client-side state update rather than a page navigation.\n` +
+                        `from a client-side state update rather than a page navigation. ` +
                         `In rarer situations this may be due to differences in the SSR ` +
-                        `environment and the browser environment.`,
+                        `environment and the browser environment.\n`,
                     nextStack
                 )
+                if (uncachedCallback) return uncachedCallback(err, type)
+                throw err
             }
         }
         let tape = parent.c[query]
@@ -193,9 +195,13 @@ export function filterData(tape, data) {
 }
 
 function QueryError(message, stack) {
-    return new Error(
+    const err = new Error(
         `${message}\n${stack.map(k => '> ' + simpleFormatTemplate(JSON.parse(k))).join('\n')}`
     )
+    // Here we mess with the error's stack trace in order to highlight the
+    // user's own code, rather than this data fetching library.
+    if (err.stack) err.stack = err.stack.replace(/[^\n]+query\.ts[^\n]+\n/g, '')
+    return err
 }
 
 function simpleFormatTemplate(args) {
