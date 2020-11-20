@@ -2,5 +2,8 @@ import { User } from '@client/auth'
 import { IncomingMessage } from 'http'
 
 export async function getUser(req: IncomingMessage): Promise<User> {
-    return null as any
+    // return null as any
+    return {
+        id: 1,
+    }
 }

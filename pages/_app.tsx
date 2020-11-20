@@ -31,6 +31,19 @@ const GlobalStyle = createGlobalStyle(css`
     #nprogress .spinner-icon {
         display: none;
     }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    td,
+    th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+        white-space: pre-wrap;
+    }
 `)
 
 const theme = {}
@@ -96,9 +109,8 @@ function useScrollRestoration() {
             })
 
             Router.beforePopState(() => {
-                const [x, y] = cachedScrollPositions.pop()
-                shouldScrollRestore = { x, y }
-
+                const pos = cachedScrollPositions.pop()
+                if (pos) shouldScrollRestore = { x: pos[0], y: pos[1] }
                 return true
             })
         }
@@ -114,20 +126,28 @@ function useScrollRestoration() {
 // "routeChangeComplete" event, we throw the error rather than
 // enter some kind of refresh loop.
 
-let uncachedSoftReload
+let uncachedSoftReload: number
 function defaultUncachedCallback(err: Error, type: number) {
-    if (uncachedSoftReload) throw err
-    // eslint-disable-next-line no-console
-    console.error(err)
-    uncachedSoftReload = true
-    Router.push(Router.asPath).then(
-        success => {
-            if (success) uncachedSoftReload = false
-        },
-        () => {
-            // do nothing
+    if (uncachedSoftReload === 2) throw err
+    if (!uncachedSoftReload) {
+        // eslint-disable-next-line no-console
+        console.error(err)
+        uncachedSoftReload = 1
+
+        const routeChangeStartHandler = () => {
+            uncachedSoftReload = 2
+            Router.events.off('routeChangeStart', routeChangeStartHandler)
         }
-    )
+        Router.events.on('routeChangeStart', routeChangeStartHandler)
+        Router.push(Router.asPath).then(
+            success => {
+                if (success) uncachedSoftReload = 0
+            },
+            () => {
+                // do nothing
+            }
+        )
+    }
     // Here we return something that matches the expected
     // Query interface, so that our subsequent code has the
     // greatest likelihood of successfully rendering before
