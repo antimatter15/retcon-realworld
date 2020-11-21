@@ -56,7 +56,10 @@ export default function makeServerProps(
 
         const tape = { a: 'data', t: 1, count: 0 }
         let data = {}
-        let all_sql = ''
+        let debug = {
+            queries: [],
+            time: 0,
+        }
 
         const query = createQuery(tape, data, true)
 
@@ -74,7 +77,7 @@ export default function makeServerProps(
             )
 
             const sql = sqliteCodegen(tape)
-            all_sql += sql + '\n\n'
+            debug.queries.push(sql)
             if (sql === '') break
             const db = await dbHandle
             const result = await db.all(sql)
@@ -85,14 +88,14 @@ export default function makeServerProps(
         filterData(tape, data)
         filterTape(tape)
 
-        all_sql += 'Total time: ' + (Date.now() - timeStart)
+        debug.time = Date.now() - timeStart
 
         return {
             props: {
                 user: user,
                 tape: tape,
                 data: data,
-                sql: all_sql,
+                debug: debug,
             },
         }
     }

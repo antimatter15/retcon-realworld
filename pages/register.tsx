@@ -16,7 +16,7 @@ export default function App() {
     const router = useRouter()
     return (
         <div>
-            <Header />
+            <Header title="Register" />
             <div className="auth-page">
                 <div className="container page">
                     <div className="row">

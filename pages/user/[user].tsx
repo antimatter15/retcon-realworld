@@ -14,7 +14,7 @@ export default function App() {
     const query = useQuery()
     const router = useRouter()
     const userId = router.query.user
-    const userObject = query.one`FROM user WHERE id = ${userId}`
+    const user = query.one`FROM user WHERE id = ${userId}`
     const view = router.query.view
 
     const criteria =
@@ -24,7 +24,7 @@ export default function App() {
 
     return (
         <div>
-            <Header />
+            <Header title={user`name`} />
             <div className="profile-page">
                 <div className="user-info">
                     <div className="container">
@@ -32,14 +32,14 @@ export default function App() {
                             <div className="col-xs-12 col-md-10 offset-md-1">
                                 <img
                                     src={
-                                        userObject`picture` ||
+                                        user`picture` ||
                                         'https://static.productionready.io/images/smiley-cyrus.jpg'
                                     }
                                     className="user-img"
                                 />
-                                <h4>{userObject`name`}</h4>
-                                <p>{userObject`bio`}</p>
-                                <FollowButton user={userObject} />
+                                <h4>{user`name`}</h4>
+                                <p>{user`bio`}</p>
+                                <FollowButton user={user} />
                             </div>
                         </div>
                     </div>

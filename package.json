@@ -15,6 +15,7 @@
     "babel-plugin-styled-components": "^1.11.1",
     "bcrypt": "^5.0.0",
     "cookie": "^0.4.1",
+    "jsonwebtoken": "^8.5.1",
     "marked": "^1.2.5",
     "next": "^10.0.2",
     "nprogress": "^0.2.0",

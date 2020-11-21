@@ -4,13 +4,6 @@ import { Req, Res, SQLInsert, User, SQLGet } from './rpc'
 
 const BCRYPT_SALT_ROUNDS = 10
 
-export async function hello() {
-    // User()
-    // Res()
-    // Req()
-    return 42
-}
-
 export async function favoritePost(postId) {
     const user = User(this)
     await SQLInsert`INSERT INTO post_favorite (post, user) VALUES (${postId}, ${user.id})`

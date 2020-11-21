@@ -13,7 +13,7 @@ export default function App() {
     const query = useQuery()
     return (
         <div>
-            <Header />
+            <Header title="Home" />
             <Body />
         </div>
     )

@@ -16,7 +16,7 @@ export default function App() {
     const [error, setError] = React.useState(null)
     return (
         <div>
-            <Header />
+            <Header title="Login" />
             <div className="auth-page">
                 <div className="container page">
                     <div className="row">

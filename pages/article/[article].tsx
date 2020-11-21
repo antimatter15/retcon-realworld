@@ -20,7 +20,7 @@ export default function App() {
 
     return (
         <div>
-            <Header />
+            <Header title={article`title`} />
             <div className="article-page">
                 <div className="banner">
                     <div className="container">
@@ -76,7 +76,7 @@ function ArticleMeta({ article }) {
                 <Link href={'/user/' + author`id`}>
                     <a className="author">{author`name`}</a>
                 </Link>
-                <span className="date">{article`creation_date`}</span>
+                <span className="date">{new Date(article`creation_date`).toDateString()}</span>
             </div>
             {!user.id ? null : article`author` + '' === user.id + '' ? (
                 <span>

@@ -6,8 +6,9 @@ import { css } from 'styled-components'
 import { useUser } from '@client/auth'
 import { useRouter } from 'next/router'
 import RPC, { RPCRefresh } from '@client/rpc'
+import Head from 'next/head'
 
-export function Header() {
+export function Header({ title }) {
     const user = useUser()
     const query = useQuery()
     const router = useRouter()
@@ -43,6 +44,9 @@ export function Header() {
     }
     return (
         <nav className="navbar navbar-light">
+            <Head>
+                <title>{title} | RealWorld</title>
+            </Head>
             <div className="container">
                 <Link href="/">
                     <a className="navbar-brand">conduit</a>
@@ -89,7 +93,7 @@ export function ArticlePreview({ post }) {
                     <Link href={'/user/' + author`id`}>
                         <a className="author">{author`name`}</a>
                     </Link>
-                    <span className="date">{post`creation_date`}</span>
+                    <span className="date">{new Date(post`creation_date`).toDateString()}</span>
                 </div>
                 <div className="pull-xs-right">
                     <FavoriteButton post={post} />

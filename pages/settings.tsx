@@ -19,7 +19,7 @@ export default function App() {
     const userObject = query.one`FROM user WHERE id = ${user.id}`
     return (
         <div>
-            <Header />
+            <Header title="Settings" />
             <div className="settings-page">
                 <div className="container page">
                     <div className="row">

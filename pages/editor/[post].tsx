@@ -22,7 +22,7 @@ export default function App() {
 
     return (
         <div>
-            <Header />
+            <Header title={'Edit Post'} />
             <div className="editor-page">
                 <div className="container page">
                     <div className="row">
