@@ -4,7 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { css } from 'styled-components'
 import { useUser } from '@client/auth'
-import { ArticlePreview, Header } from '@components/RealWorld'
+import { ArticlePreview, Header, PostList } from '@components/RealWorld'
 import { useRouter } from 'next/router'
 
 export const getServerSideProps = makeServerProps(App)
@@ -30,8 +30,6 @@ function Body() {
         ? 'global'
         : 'follow'
 
-    const PAGE_SIZE = 10
-
     const criteria =
         view === 'tag'
             ? SQL`WHERE id IN (SELECT post FROM post_tags WHERE tag = ${router.query.tag})`
@@ -39,11 +37,6 @@ function Body() {
             ? SQL``
             : SQL`WHERE post.author IN (SELECT user FROM user_follow WHERE follower = ${user.id})`
 
-    const resultCount = query`COUNT(*) FROM post ${criteria}` || 0
-    const currentPage = parseInt(router.query.page + '') || 1
-    const postList = query.many`FROM post ${criteria} ORDER BY creation_date DESC LIMIT ${PAGE_SIZE} OFFSET ${
-        PAGE_SIZE * (currentPage - 1)
-    }`
     return (
         <div className="home-page">
             {!user.id && (
@@ -99,40 +92,7 @@ function Body() {
                                 )}
                             </ul>
                         </div>
-                        {postList.map(post => (
-                            <ArticlePreview post={post} key={post`id`} />
-                        ))}
-                        {postList.length === 0 && (
-                            <div className="article-preview">No articles are here... yet.</div>
-                        )}
-
-                        {resultCount > PAGE_SIZE && (
-                            <nav>
-                                <ul className="pagination">
-                                    {Array.from(new Array(Math.ceil(resultCount / PAGE_SIZE))).map(
-                                        (k, i) => (
-                                            <li
-                                                className={
-                                                    'page-item' +
-                                                    (i + 1 === currentPage ? ' active' : '')
-                                                }
-                                            >
-                                                <Link
-                                                    href={{
-                                                        query: {
-                                                            ...router.query,
-                                                            page: i + 1,
-                                                        },
-                                                    }}
-                                                >
-                                                    <a className="page-link">{i + 1}</a>
-                                                </Link>
-                                            </li>
-                                        )
-                                    )}
-                                </ul>
-                            </nav>
-                        )}
+                        <PostList criteria={criteria} />
                     </div>
                     <div className="col-md-3">
                         <div className="sidebar">

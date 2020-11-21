@@ -1,10 +1,10 @@
-import { useQuery } from '@client/query'
+import { SQL, useQuery } from '@client/query'
 import makeServerProps from '@server/query'
 import React from 'react'
 import Link from 'next/link'
 import { css } from 'styled-components'
 import { useUser } from '@client/auth'
-import { ArticlePreview, FollowButton, Header } from '@components/RealWorld'
+import { ArticlePreview, FollowButton, Header, PostList } from '@components/RealWorld'
 import { useRouter } from 'next/router'
 import { RPCRefresh } from '@client/rpc'
 
@@ -17,12 +17,10 @@ export default function App() {
     const userObject = query.one`FROM user WHERE id = ${userId}`
     const view = router.query.view
 
-    const postList =
+    const criteria =
         view === 'favorite'
-            ? userObject.many`FROM post_favorite WHERE user = user.id`.map(
-                  fave => fave.one`FROM post WHERE post.id = post_favorite.post`
-              )
-            : userObject.many`FROM post WHERE post.author = user.id`
+            ? SQL`WHERE id IN (SELECT post FROM post_favorite WHERE user = ${userId})`
+            : SQL`WHERE author = ${userId}`
 
     return (
         <div>
@@ -77,16 +75,7 @@ export default function App() {
                                     </li>
                                 </ul>
                             </div>
-                            <div>
-                                {postList.map(post => (
-                                    <ArticlePreview post={post} key={post`id`} />
-                                ))}
-                                {postList.length === 0 && (
-                                    <div className="article-preview">
-                                        No articles are here... yet.
-                                    </div>
-                                )}
-                            </div>
+                            <PostList criteria={criteria} />
                         </div>
                     </div>
                 </div>

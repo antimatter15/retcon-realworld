@@ -129,6 +129,8 @@ export function FavoriteButton({ post }) {
     const postId = post`id`
 
     if (!user.id) return null
+    if (post`author` + '' === user.id + '') return null
+
     return (
         <button
             onClick={async e => {
@@ -152,6 +154,7 @@ export function FollowButton({ user }) {
     const isFollowing = user`EXISTS(SELECT 1 FROM user_follow WHERE follower = ${currentUser.id} AND user = user.id)`
     const userId = user`id`
 
+    if (!currentUser.id) return null
     return userId + '' === currentUser.id + '' ? (
         <Link href="/settings">
             <a className="btn btn-sm btn-outline-secondary action-btn">
@@ -178,5 +181,50 @@ export function FollowButton({ user }) {
             <i className="ion-plus-round"></i>
             &nbsp; Follow {user`name`}
         </button>
+    )
+}
+
+export function PostList({ criteria }) {
+    const user = useUser()
+    const query = useQuery()
+    const router = useRouter()
+
+    const PAGE_SIZE = 10
+
+    const resultCount = query`COUNT(*) FROM post ${criteria}` || 0
+    const currentPage = parseInt(router.query.page + '') || 1
+    const postList = query.many`FROM post ${criteria} ORDER BY creation_date DESC LIMIT ${PAGE_SIZE} OFFSET ${
+        PAGE_SIZE * (currentPage - 1)
+    }`
+    return (
+        <>
+            {postList.map(post => (
+                <ArticlePreview post={post} key={post`id`} />
+            ))}
+            {postList.length === 0 && (
+                <div className="article-preview">No articles are here... yet.</div>
+            )}
+
+            {resultCount > PAGE_SIZE && (
+                <nav>
+                    <ul className="pagination">
+                        {Array.from(new Array(Math.ceil(resultCount / PAGE_SIZE))).map((k, i) => (
+                            <li className={'page-item' + (i + 1 === currentPage ? ' active' : '')}>
+                                <Link
+                                    href={{
+                                        query: {
+                                            ...router.query,
+                                            page: i + 1,
+                                        },
+                                    }}
+                                >
+                                    <a className="page-link">{i + 1}</a>
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+            )}
+        </>
     )
 }

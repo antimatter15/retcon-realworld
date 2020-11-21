@@ -11,6 +11,51 @@ import marked from 'marked'
 
 export const getServerSideProps = makeServerProps(App)
 
+export default function App() {
+    const query = useQuery()
+    const router = useRouter()
+    const article = query.one`FROM post WHERE id = ${router.query.article}`
+
+    const markup = { __html: marked(article`body` || '', { sanitize: true }) }
+
+    return (
+        <div>
+            <Header />
+            <div className="article-page">
+                <div className="banner">
+                    <div className="container">
+                        <h1>{article`title`}</h1>
+                        <ArticleMeta article={article} />
+                    </div>
+                </div>
+                <div className="container page">
+                    <div className="row article-content">
+                        <div className="col-xs-12">
+                            <div dangerouslySetInnerHTML={markup}></div>
+                            <br />
+                            <ul className="tag-list">
+                                {article.many`FROM post_tags WHERE post = post.id`.map(tag => (
+                                    <li className="tag-default tag-pill tag-outline" key={tag`id`}>
+                                        <Link href={'/?tag=' + tag`tag`}>
+                                            <a>{tag`tag`} </a>
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <hr />
+                    <div className="article-actions">
+                        <ArticleMeta article={article} />
+                    </div>
+                    <CommentBlock post={article} />
+                </div>
+            </div>
+        </div>
+    )
+}
+
 function ArticleMeta({ article }) {
     const author = article.one`FROM user WHERE id = post.author`
     const user = useUser()
@@ -57,50 +102,6 @@ function ArticleMeta({ article }) {
                     <FavoriteButton post={article} />
                 </>
             )}
-        </div>
-    )
-}
-export default function App() {
-    const query = useQuery()
-    const router = useRouter()
-    const article = query.one`FROM post WHERE id = ${router.query.article}`
-
-    const markup = { __html: marked(article`body` || '', { sanitize: true }) }
-
-    return (
-        <div>
-            <Header />
-            <div className="article-page">
-                <div className="banner">
-                    <div className="container">
-                        <h1>{article`title`}</h1>
-                        <ArticleMeta article={article} />
-                    </div>
-                </div>
-                <div className="container page">
-                    <div className="row article-content">
-                        <div className="col-xs-12">
-                            <div dangerouslySetInnerHTML={markup}></div>
-                            <br />
-                            <ul className="tag-list">
-                                {article.many`FROM post_tags WHERE post = post.id`.map(tag => (
-                                    <li className="tag-default tag-pill tag-outline" key={tag`id`}>
-                                        <Link href={'/?tag=' + tag`tag`}>
-                                            <a>{tag`tag`} </a>
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </div>
-
-                    <hr />
-                    <div className="article-actions">
-                        <ArticleMeta article={article} />
-                    </div>
-                    <CommentBlock post={article} />
-                </div>
-            </div>
         </div>
     )
 }
