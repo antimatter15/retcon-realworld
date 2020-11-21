@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken'
 const SESSION_COOKIE_NAME = 'conduit_session'
 const SESSION_SECRET = process.env.SESSION_SECRET || 'INSECURE SESSION SECRET'
 const SESSION_DURATION = 60 * 60
+export const BCRYPT_SALT_ROUNDS = 10
 
 export async function getUser(req: IncomingMessage): Promise<User> {
     try {

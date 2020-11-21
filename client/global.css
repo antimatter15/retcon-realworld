@@ -1,0 +1,54 @@
+* {
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+    padding: 0;
+
+    font-family: Avenir, sans-serif;
+}
+
+#nprogress .bar {
+    background: #5cb85c;
+}
+#nprogress .peg {
+    box-shadow: 0 0 10px #5cb85c, 0 0 5px #5cb85c;
+}
+#nprogress .spinner-icon {
+    display: none;
+}
+
+.debug-panel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    left: 200px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(5px);
+    /* background: white; */
+    padding: 20px;
+    z-index: 10;
+    overflow-y: scroll;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+.debug-panel pre {
+    white-space: pre-wrap;
+}
+
+.debug-button {
+    z-index: 10;
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: gray;
+    padding: 5px 10px;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+}
+
+.debug-button .unit {
+    opacity: 0.5;
+}

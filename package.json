@@ -12,7 +12,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "babel-plugin-styled-components": "^1.11.1",
     "bcrypt": "^5.0.0",
     "cookie": "^0.4.1",
     "jsonwebtoken": "^8.5.1",
@@ -23,8 +22,7 @@
     "react-dom": "^17.0.1",
     "react-ssr-prepass": "^1.2.1",
     "sqlite": "^4.0.17",
-    "sqlite3": "^5.0.0",
-    "styled-components": "^5.2.1"
+    "sqlite3": "^5.0.0"
   },
   "devDependencies": {
     "@types/node": "^14.14.8",

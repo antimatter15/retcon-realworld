@@ -1,8 +1,6 @@
 import bcrypt from 'bcrypt'
 import { Req, Res, SQLInsert, User, SQLGet } from './rpc'
-import { setUserCookie } from './auth'
-
-const BCRYPT_SALT_ROUNDS = 10
+import { setUserCookie, BCRYPT_SALT_ROUNDS } from './auth'
 
 export async function favoritePost(postId) {
     const user = User(this)

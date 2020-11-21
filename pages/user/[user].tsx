@@ -1,12 +1,15 @@
 import { SQL, useQuery } from '@client/query'
 import makeServerProps from '@server/query'
 import React from 'react'
-import Link from 'next/link'
-import { css } from 'styled-components'
-import { useUser } from '@client/auth'
-import { ArticlePreview, FollowButton, Header, PostList } from '@components/RealWorld'
+import {
+    ArticlePreview,
+    FollowButton,
+    Header,
+    NavPages,
+    PostList,
+    TabNavigation,
+} from '@components/RealWorld'
 import { useRouter } from 'next/router'
-import { RPCRefresh } from '@client/rpc'
 
 export const getServerSideProps = makeServerProps(App)
 
@@ -15,12 +18,17 @@ export default function App() {
     const router = useRouter()
     const userId = router.query.user
     const user = query.one`FROM user WHERE id = ${userId}`
-    const view = router.query.view
+    const view = router.query.view === 'favorite' ? 'favorite' : 'author'
 
     const criteria =
         view === 'favorite'
             ? SQL`WHERE id IN (SELECT post FROM post_favorite WHERE user = ${userId})`
             : SQL`WHERE author = ${userId}`
+
+    const TabPages: NavPages = {
+        author: ['/user/' + userId, 'My Articles'],
+        favorite: [`/user/${userId}?view=favorite`, 'Favorited Articles'],
+    }
 
     return (
         <div>
@@ -48,32 +56,7 @@ export default function App() {
                     <div className="row">
                         <div className="col-xs-12 col-md-10 offset-md-1">
                             <div className="articles-toggle">
-                                <ul className="nav nav-pills outline-active">
-                                    <li className="nav-item">
-                                        <Link href={'/user/' + userId}>
-                                            <a
-                                                className={
-                                                    'nav-link' +
-                                                    (view === 'favorite' ? '' : ' active')
-                                                }
-                                            >
-                                                My Articles
-                                            </a>
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link href={'/user/' + userId + '?view=favorite'}>
-                                            <a
-                                                className={
-                                                    'nav-link' +
-                                                    (view === 'favorite' ? ' active' : '')
-                                                }
-                                            >
-                                                Favorited Articles
-                                            </a>
-                                        </Link>
-                                    </li>
-                                </ul>
+                                <TabNavigation view={view} pages={TabPages} />
                             </div>
                             <PostList criteria={criteria} />
                         </div>

@@ -1,9 +1,6 @@
 import { User as UserType } from '@client/auth'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { dbHandle, sqliteTemplate } from './query'
-// import { db } from './query'
-// import SQLTemplate from 'sql-template-strings'
-// import { User as UserType } from '@client/auth'
 
 export function Res(scope): NextApiResponse {
     return scope.res

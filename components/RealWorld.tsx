@@ -2,7 +2,6 @@ import { useQuery } from '@client/query'
 import makeServerProps from '@server/query'
 import React from 'react'
 import Link from 'next/link'
-import { css } from 'styled-components'
 import { useUser } from '@client/auth'
 import { useRouter } from 'next/router'
 import RPC, { RPCRefresh } from '@client/rpc'
@@ -70,6 +69,26 @@ export function Header({ title }) {
                 </ul>
             </div>
         </nav>
+    )
+}
+
+export type NavPages = {
+    [key: string]: null | [string, React.ReactNode]
+}
+
+export function TabNavigation({ view, pages }: { view: string; pages: NavPages }) {
+    return (
+        <ul className="nav nav-pills outline-active">
+            {Object.entries(pages)
+                .filter(([v, link]) => link)
+                .map(([v, [path, label]]) => (
+                    <li className="nav-item">
+                        <Link href={path as string}>
+                            <a className={'nav-link' + (view === v ? ' active' : '')}>{label}</a>
+                        </Link>
+                    </li>
+                ))}
+        </ul>
     )
 }
 
