@@ -1,6 +1,6 @@
-import cookie from 'cookie'
 import bcrypt from 'bcrypt'
 import { Req, Res, SQLInsert, User, SQLGet } from './rpc'
+import { setUserCookie } from './auth'
 
 const BCRYPT_SALT_ROUNDS = 10
 
@@ -109,7 +109,6 @@ export async function PUBLIC_register(username, email, password) {
 }
 
 export async function PUBLIC_login(email, password) {
-    const res = Res(this)
     if (!email) throw new Error('Email must not be blank')
     if (password.length < 8) throw new Error('Password must be at least 8 letters')
 
@@ -118,26 +117,11 @@ export async function PUBLIC_login(email, password) {
     const correctPassword = await bcrypt.compare(password, user.password)
     if (!correctPassword) throw new Error('Wrong password!')
 
-    res.setHeader(
-        'Set-Cookie',
-        cookie.serialize('__demo_username', user.id, {
-            httpOnly: true,
-            maxAge: 3600,
-            path: '/',
-            sameSite: 'strict',
-        })
-    )
+    const res = Res(this)
+    await setUserCookie(user.id, res)
 }
 
 export async function PUBLIC_logout() {
     const res = Res(this)
-    res.setHeader(
-        'Set-Cookie',
-        cookie.serialize('__demo_username', '', {
-            httpOnly: true,
-            maxAge: -1,
-            path: '/',
-            sameSite: 'strict',
-        })
-    )
+    await setUserCookie(null, res)
 }
