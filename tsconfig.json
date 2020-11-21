@@ -20,7 +20,8 @@
     "baseUrl": ".",
     "paths": {
       "@server/*": ["./server/*"],
-      "@client/*": ["./client/*"]
+      "@client/*": ["./client/*"],
+      "@components/*": ["./components/*"]
     }
   },
   "include": [

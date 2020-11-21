@@ -23,26 +23,13 @@ const GlobalStyle = createGlobalStyle(css`
     }
 
     #nprogress .bar {
-        background: #f25e5c;
+        background: #5cb85c;
     }
     #nprogress .peg {
-        box-shadow: 0 0 10px #f25e5c, 0 0 5px #f25e5c;
+        box-shadow: 0 0 10px #5cb85c, 0 0 5px #5cb85c;
     }
     #nprogress .spinner-icon {
         display: none;
-    }
-
-    table {
-        border-collapse: collapse;
-        width: 100%;
-    }
-
-    td,
-    th {
-        border: 1px solid #dddddd;
-        text-align: left;
-        padding: 8px;
-        white-space: pre-wrap;
     }
 `)
 
@@ -58,6 +45,15 @@ export default function MyApp({ Component, pageProps }) {
             <UserContext.Provider value={user}>
                 <GlobalStyle />
                 <ThemeProvider theme={theme}>
+                    <link rel="stylesheet" href="//demo.productionready.io/main.css"></link>
+                    <link
+                        rel="stylesheet"
+                        href="//code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css"
+                    ></link>
+                    <link
+                        rel="stylesheet"
+                        href="//fonts.googleapis.com/css?family=Titillium+Web:700|Source+Serif+Pro:400,700|Merriweather+Sans:400,700|Source+Sans+Pro:400,300,600,700,300italic,400italic,600italic,700italic"
+                    ></link>
                     <Component {...pageProps} />
                     <div
                         css={css`

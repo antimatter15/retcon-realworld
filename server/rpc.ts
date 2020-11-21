@@ -1,5 +1,6 @@
-import { User } from '@client/auth'
+import { User as UserType } from '@client/auth'
 import { NextApiRequest, NextApiResponse } from 'next'
+import { dbHandle, sqliteTemplate } from './query'
 // import { db } from './query'
 // import SQLTemplate from 'sql-template-strings'
 // import { User as UserType } from '@client/auth'
@@ -12,23 +13,22 @@ export function Req(scope): NextApiRequest {
     return scope.req
 }
 
-export function User(scope): User {
+export function User(scope): UserType {
     return scope.user
 }
 
-// export async function SQL(strings: TemplateStringsArray, ...values) {
-//     return await db.query(SQLTemplate(strings, ...values))
-// }
+export async function SQLInsert(strings: TemplateStringsArray, ...values) {
+    const db = await dbHandle
+    const res = await db.run(sqliteTemplate([strings, ...values]))
+    return res.lastID
+}
 
-// export async function SQLMany(strings: TemplateStringsArray, ...values) {
-//     return await db.all(strings.join('?'), values)
-// }
+export async function SQLAll(strings: TemplateStringsArray, ...values) {
+    const db = await dbHandle
+    return await db.all(sqliteTemplate([strings, ...values]))
+}
 
-// export async function SQLOne(strings: TemplateStringsArray, ...values) {
-//     return await db.get(strings.join('?'), values)
-// }
-
-// export async function SQLRun(strings: TemplateStringsArray, ...values) {
-//     const res = await db.run(strings.join('?'), values)
-//     return res.lastID
-// }
+export async function SQLGet(strings: TemplateStringsArray, ...values) {
+    const db = await dbHandle
+    return await db.get(sqliteTemplate([strings, ...values]))
+}
