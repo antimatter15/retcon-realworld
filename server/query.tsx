@@ -77,8 +77,8 @@ export default function makeServerProps(
             )
 
             const sql = sqliteCodegen(tape)
-            debug.queries.push(sql)
             if (sql === '') break
+            debug.queries.push(sql)
             const db = await dbHandle
             const result = await db.all(sql)
             const new_data = JSON.parse(result[0].data)

@@ -114,10 +114,10 @@ export function createQuery(
             }
         }
         const tape = parent.c[query]
-        tape.used = true
+        if (mutable) tape.used = true
 
         if (!data || !(tape.a in data)) {
-            if (data !== null) tape.miss = true
+            if (data !== null && mutable) tape.miss = true
         }
         if (tape.t !== type) throw new Error('Query reused with different type')
         if (type === 2) {
@@ -132,8 +132,10 @@ export function createQuery(
     }
     const q = make(root, data)
     q.tape = root
-    root.miss = true
-    root.used = true
+    if (mutable) {
+        root.miss = true
+        root.used = true
+    }
     return q
 }
 
