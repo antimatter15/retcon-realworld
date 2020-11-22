@@ -19,6 +19,7 @@ import { getUser } from '@server/auth'
 
 import sqlite3 from 'sqlite3'
 import { open } from 'sqlite'
+import { escapeSQLite, lumpEmpty, lumpPreview, sqliteCodegen } from './codegen'
 
 export const dbHandle = open({
     filename: './data.db',
@@ -77,12 +78,11 @@ export default function makeServerProps(
             )
 
             const sql = sqliteCodegen(tape)
-            if (sql === '') break
-            debug.queries.push(sql)
+            if (lumpEmpty(sql)) break
+            debug.queries.push(lumpPreview(sql, escapeSQLite))
             const db = await dbHandle
-            const result = await db.all(sql)
+            const result = await db.all(sql[0].join('?'), sql.slice(1))
             const new_data = JSON.parse(result[0].data)
-
             mergeData(tape, data, new_data)
         }
         filterData(tape, data)
@@ -99,36 +99,4 @@ export default function makeServerProps(
             },
         }
     }
-}
-
-// Since 3.9 (2015-10-14)
-export function sqliteCodegen(tape: Tape, pretty = true) {
-    const codegen = (ast, query) => {
-        query = sqliteTemplate(JSON.parse(query))
-        if (ast.t === 0 && ast.miss) return `SELECT ${query}`
-        let inner = Object.entries(ast.c || {})
-            .map(([query, ast]) => [ast, codegen(ast, query)])
-            .filter(([ast, sql]) => sql)
-            .map(([ast, sql]) => `'${ast.a}', (${sql})`)
-        if (inner.length === 0) return ''
-        let fmt = pretty
-            ? '\n  ' + inner.join(',\n').replace(/\n/g, '\n  ') + '\n'
-            : ' ' + inner.join(',') + ' '
-        if (ast.t === 1) return `SELECT json_object(${fmt}) AS ${ast.a} ${query}`
-        if (ast.t === 2)
-            return `SELECT json_group_array(json(${ast.a})) FROM (SELECT json_object(${fmt}) AS ${ast.a} ${query})`
-        return ''
-    }
-    return codegen(tape, '[[""]]')
-}
-
-function escapeSqlite(value) {
-    if (value === null) return 'NULL'
-    if (Array.isArray(value)) return '(' + value.map(escapeSqlite).join(',') + ')'
-    return "'" + (value + '').replace(/'/g, "''") + "'"
-}
-
-export function sqliteTemplate(args) {
-    const [strings, ...values] = args
-    return strings.reduce((prev, cur, i) => prev + escapeSqlite(values[i - 1]) + cur)
 }

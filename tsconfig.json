@@ -15,14 +15,20 @@
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "isolatedModules": true,
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@server/*": ["./server/*"],
-      "@client/*": ["./client/*"],
-      "@components/*": ["./components/*"]
-    }
+      "@server/*": [
+        "./server/*"
+      ],
+      "@client/*": [
+        "./client/*"
+      ],
+      "@components/*": [
+        "./components/*"
+      ]
+    },
+    "isolatedModules": true
   },
   "include": [
     "next-env.d.ts",
