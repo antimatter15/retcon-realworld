@@ -1,6 +1,5 @@
-import { Tape } from '@client/query'
+import { Tape, SQLValue } from '@client/query'
 
-type SQLValue = null | string | number | boolean
 export type Lump = [string[], ...SQLValue[]]
 
 // Since SQLite 3.9 (2015-10-14)

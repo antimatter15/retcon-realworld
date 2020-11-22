@@ -1,6 +1,6 @@
 CREATE TABLE user (
-	id integer PRIMARY KEY,
-	name text NOT NULL,
+    id integer PRIMARY KEY,
+    name text NOT NULL,
     email text UNIQUE NOT NULL,
     bio text,
     picture text,

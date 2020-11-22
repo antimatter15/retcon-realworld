@@ -8,23 +8,27 @@ export function useQuery() {
     return React.useContext(QueryContext)
 }
 
+export type SQLValue = null | string | number | boolean
+
+type SQLEmbed = SQLValue | SQLFragment
+
 // This is the core Query interface that allows us to
 // write composable SQL fragments that can be compiled into
 // efficient queries
 
 export type Query = {
     // field accessor
-    (strings: TemplateStringsArray, ...values: any[]): any
+    (strings: TemplateStringsArray, ...values: SQLEmbed[]): any
     (query: SQLFragment): any
     <T>(query: SQLFragment): T | null
-    <T>(strings: TemplateStringsArray, ...values: any[]): T | null
+    <T>(strings: TemplateStringsArray, ...values: SQLEmbed[]): T | null
 
     // one-to-one relations
-    one(strings: TemplateStringsArray, ...values: any[]): Query
+    one(strings: TemplateStringsArray, ...values: SQLEmbed[]): Query
     one(query: SQLFragment): Query
 
     // one-to-many relations
-    many(strings: TemplateStringsArray, ...values: any[]): Query[]
+    many(strings: TemplateStringsArray, ...values: SQLEmbed[]): Query[]
     many(query: SQLFragment): Query[]
 }
 
