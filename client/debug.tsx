@@ -2,6 +2,7 @@ import React from 'react'
 
 export function ShowDebug({ debug, tape, data }) {
     const [show, setShow] = React.useState(false)
+    if (!debug) return null
     return (
         <>
             {show && (
