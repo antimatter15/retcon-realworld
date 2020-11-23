@@ -8,6 +8,8 @@ import {
     cleanTape,
     filterData,
     filterTape,
+    isWeaveEmpty,
+    printWeave,
 } from '@client/query'
 import { RouterContext } from 'next/dist/next-server/lib/router-context'
 import url from 'url'
@@ -19,7 +21,7 @@ import { getUser } from '@server/auth'
 
 import sqlite3 from 'sqlite3'
 import { open } from 'sqlite'
-import { escapeSQLite, lumpEmpty, lumpPreview, sqliteCodegen } from './codegen'
+import { escapeSQLite, sqliteCodegen } from './codegen'
 
 export const dbHandle = open({
     filename: './data.db',
@@ -78,8 +80,8 @@ export default function makeServerProps(
             )
 
             const sql = sqliteCodegen(tape)
-            if (lumpEmpty(sql)) break
-            debug.queries.push(lumpPreview(sql, escapeSQLite))
+            if (isWeaveEmpty(sql)) break
+            debug.queries.push(printWeave(sql, escapeSQLite))
             const db = await dbHandle
             const result = await db.all(sql[0].join('?'), sql.slice(1))
             const new_data = JSON.parse(result[0].data)

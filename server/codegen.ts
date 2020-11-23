@@ -1,85 +1,50 @@
-import { Tape, SQLValue } from '@client/query'
-
-export type Lump = [string[], ...SQLValue[]]
+import { Weave, weave, isWeaveEmpty, indentWeave, Tape, SQLValue } from '@client/query'
 
 // Since SQLite 3.9 (2015-10-14)
-export function sqliteCodegen(tape: Tape, pretty = true): Lump {
-    const codegen = (tape: Tape, query: Lump): Lump => {
-        if (tape.t === 0 && tape.miss) return lump`SELECT ${query}`
-        const inner = Object.entries(tape.c || {})
-            .map(([q, child]) => [child, codegen(child, JSON.parse(q))] as [Tape, Lump])
-            .filter(([_, sql]) => !lumpEmpty(sql))
-        if (inner.length === 0) return [['']]
-        const inner_concat = inner
-            .map(([ast, sql]) => lump`${[[`'${ast.a}'`]]}, (${sql})`)
-            .reduce((prev, cur) => (pretty ? lump`${prev},\n${cur}` : lump`${prev},${cur}`))
-        const fmt = pretty ? indentLump(inner_concat) : inner_concat
-        if (tape.t === 1) return lump`SELECT json_object(${fmt}) AS ${[[tape.a]]} ${query}`
+export function sqliteCodegen(root: Tape, pretty = true): Weave {
+    const codegen = (tape: Tape, query: Weave): Weave => {
+        if (tape.t === 0 && tape.miss) return weave`SELECT ${query}`
+        const innerList = Object.entries(tape.c || {})
+            .map(([q, child]) => [child, codegen(child, JSON.parse(q))] as [Tape, Weave])
+            .filter(([, sql]) => !isWeaveEmpty(sql))
+        if (innerList.length === 0) return [['']]
+        const inner = innerList
+            .map(([ast, sql]) => weave`${[[`'${ast.a}'`]]}, (${sql})`)
+            .reduce((prev, cur) => (pretty ? weave`${prev},\n${cur}` : weave`${prev},${cur}`))
+        const fmt = pretty ? indentWeave(inner) : inner
+        if (tape.t === 1) return weave`SELECT json_object(${fmt}) AS ${[[tape.a]]} ${query}`
         if (tape.t === 2)
-            return lump`SELECT json_group_array(json(${[
+            return weave`SELECT json_group_array(json(${[
                 [tape.a],
             ]})) FROM (SELECT json_object(${fmt}) AS ${[[tape.a]]} ${query})`
         throw new Error('Invalid Tape!')
     }
-    return codegen(tape, [['']])
+    return codegen(root, [['']])
 }
 
 // Since Postgres 9.3 (2013-09-09)
-export function postgresCodegen(tape: Tape, pretty = true): Lump {
-    const codegen = (tape: Tape, query: Lump): Lump => {
-        if (tape.t === 0 && tape.miss) return lump`SELECT ${query}`
-        const inner = Object.entries(tape.c || {})
-            .map(([q, child]) => [child, codegen(child, JSON.parse(q))] as [Tape, Lump])
-            .filter(([_, sql]) => !lumpEmpty(sql))
-        if (inner.length === 0) return [['']]
-        const inner_concat = inner
-            .map(([ast, sql]) => lump`(${sql}) AS ${[[ast.a]]}`)
-            .reduce((prev, cur) => (pretty ? lump`${prev},\n${cur}` : lump`${prev},${cur}`))
-        const fmt = pretty ? indentLump(inner_concat) : inner_concat
+export function postgresCodegen(root: Tape, pretty = true): Weave {
+    const codegen = (tape: Tape, query: Weave): Weave => {
+        if (tape.t === 0 && tape.miss) return weave`SELECT ${query}`
+        const innerList = Object.entries(tape.c || {})
+            .map(([q, child]) => [child, codegen(child, JSON.parse(q))] as [Tape, Weave])
+            .filter(([, sql]) => !isWeaveEmpty(sql))
+        if (innerList.length === 0) return [['']]
+        const inner = innerList
+            .map(([ast, sql]) => weave`(${sql}) AS ${[[ast.a]]}`)
+            .reduce((prev, cur) => (pretty ? weave`${prev},\n${cur}` : weave`${prev},${cur}`))
+        const fmt = pretty ? indentWeave(inner) : inner
         if (tape.t === 1)
-            return lump`SELECT row_to_json(${[[tape.a]]}.*) AS ${[
+            return weave`SELECT row_to_json(${[[tape.a]]}.*) AS ${[
                 [tape.a],
             ]} FROM (SELECT ${fmt} ${query}) AS ${[[tape.a]]}`
         if (tape.t === 2)
-            return lump`SELECT json_agg(row_to_json(${[
+            return weave`SELECT json_agg(row_to_json(${[
                 [tape.a],
             ]}.*)) FROM (SELECT ${fmt} ${query}) AS ${[[tape.a]]}`
         throw new Error('Invalid Tape!')
     }
-    return codegen(tape, [['']])
-}
-
-function lump(strings: TemplateStringsArray, ...values: Lump[]): Lump {
-    if (strings.length - 1 !== values.length) throw new Error('Invalid lump')
-    const outStr = [strings[0]]
-    const outVal = []
-    for (let i = 0; i < values.length; i++) {
-        const [s, ...v] = values[i]
-        outStr[outStr.length - 1] += s[0]
-        for (let j = 0; j < v.length; j++) {
-            outStr.push(s[j + 1])
-            outVal.push(v[j])
-        }
-        outStr[outStr.length - 1] += strings[i + 1]
-    }
-    return [outStr, ...outVal]
-}
-
-function indentLump(flat: Lump): Lump {
-    return lump`\n  ${[
-        flat[0].map((k, i) => k.replace(/\n/g, '\n  ')),
-        ...(flat.slice(1) as SQLValue[]),
-    ]}\n`
-}
-
-export function lumpEmpty(flat: Lump): boolean {
-    return flat.length === 1 && flat[0][0] === ''
-}
-
-const JSONPreview = val => `{${JSON.stringify(val)}}`
-
-export function lumpPreview(flat: Lump, escapeFn = JSONPreview): string {
-    return flat[0].reduce((acc, cur, i) => acc + escapeFn(flat[i]) + cur)
+    return codegen(root, [['']])
 }
 
 export function escapeSQLite(value: SQLValue): string {

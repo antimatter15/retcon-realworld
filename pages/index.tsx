@@ -12,16 +12,12 @@ export default function App() {
     const user = useUser()
     const query = useQuery()
     const router = useRouter()
-
-    const view = router.query.tag
-        ? 'tag'
-        : router.query.view === 'global' || !user.id
-        ? 'global'
-        : 'follow'
+    const tag = router.query.tag as string
+    const view = tag ? 'tag' : router.query.view === 'global' || !user.id ? 'global' : 'follow'
 
     const criteria =
         view === 'tag'
-            ? SQL`WHERE id IN (SELECT post FROM post_tags WHERE tag = ${router.query.tag})`
+            ? SQL`WHERE id IN (SELECT post FROM post_tags WHERE tag = ${tag})`
             : view === 'global'
             ? SQL``
             : SQL`WHERE post.author IN (SELECT user FROM user_follow WHERE follower = ${user.id})`
@@ -29,10 +25,10 @@ export default function App() {
     const NavLinkTabs: NavPages = {
         follow: user.id && ['/', 'Your Feed'],
         global: ['/?view=global', 'Global Feed'],
-        tag: router.query.tag && [
-            '/?tag=' + router.query.tag,
+        tag: tag && [
+            '/?tag=' + tag,
             <>
-                <i className="ion-pound"></i> {router.query.tag}
+                <i className="ion-pound"></i> {tag}
             </>,
         ],
     }
@@ -40,13 +36,7 @@ export default function App() {
     return (
         <div>
             <Header
-                title={
-                    view === 'tag'
-                        ? `#${router.query.tag}`
-                        : view === 'global'
-                        ? 'Global Feed'
-                        : 'Your Feed'
-                }
+                title={view === 'tag' ? `#${tag}` : view === 'global' ? 'Global Feed' : 'Your Feed'}
             />
             <div className="home-page">
                 {!user.id && (
